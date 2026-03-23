@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Focus — Task Manager</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Focus">
+<meta name="theme-color" content="#007AFF">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxODAiIHkyPSIxODAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzAwN0FGRiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzNEM3NTkiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iNDAiIGZpbGw9InVybCgjYmcpIi8+CiAgPCEtLSBDaGVja21hcmsgY2lyY2xlIC0tPgogIDxjaXJjbGUgY3g9IjkwIiBjeT0iODAiIHI9IjM0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjYiIG9wYWNpdHk9IjAuMyIvPgogIDxwYXRoIGQ9Ik03MCA4MEw4NCA5NEwxMTAgNjgiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPCEtLSBGb2N1cyB0ZXh0IC0tPgogIDx0ZXh0IHg9IjkwIiB5PSIxNDYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSItYXBwbGUtc3lzdGVtLCBIZWx2ZXRpY2EgTmV1ZSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0id2hpdGUiPkZvY3VzPC90ZXh0Pgo8L3N2Zz4=">
+<link rel="manifest" id="pwa-manifest">
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+    --card2: #F9F9FB;
+    --accent: #007AFF;
+    --accent-soft: #EAF3FF;
+    --green: #34C759;
+    --green-soft: #E8F9EC;
+    --red: #FF3B30;
+    --orange: #FF9500;
+    --label: #1C1C1E;
+    --label2: #3C3C43;
+    --label3: #8E8E93;
+    --separator: rgba(60,60,67,0.12);
+    --shadow: 0 2px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.14);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --font: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--label);
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+    padding-bottom: 100px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: rgba(242,242,247,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 52px 20px 12px;
+    border-bottom: 1px solid var(--separator);
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-end; }
+  .header-title { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; color: var(--label); }
+  .header-date { font-size: 13px; color: var(--label3); font-weight: 400; margin-top: 2px; }
+
+  /* ── Week Calendar ── */
+  .week-strip {
+    padding: 16px 20px 0;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .day-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px 4px;
+    border-radius: 14px;
+    transition: background 0.15s, transform 0.1s;
+    position: relative;
+    user-select: none;
+  }
+  .day-cell:active { transform: scale(0.93); }
+  .day-cell.today .day-num {
+    background: var(--accent);
+    color: #fff;
+  }
+  .day-cell.selected {
+    background: var(--accent-soft);
+  }
+  .day-cell.selected .day-name { color: var(--accent); }
+  .day-name { font-size: 11px; font-weight: 500; color: var(--label3); text-transform: uppercase; letter-spacing: 0.3px; }
+  .day-num {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 600;
+    color: var(--label);
+    transition: background 0.2s, color 0.2s;
+  }
+  .task-dot-row { display: flex; gap: 3px; height: 5px; align-items: center; }
+  .task-dot { width: 4px; height: 4px; border-radius: 50%; }
+  .dot-daily { background: var(--accent); }
+  .dot-weekly { background: var(--orange); }
+
+  /* ── Section ── */
+  .section { padding: 24px 20px 0; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .section-badge {
+    font-size: 12px; font-weight: 600;
+    padding: 3px 9px; border-radius: 20px;
+  }
+  .badge-daily { background: var(--accent-soft); color: var(--accent); }
+  .badge-weekly { background: #FFF3E0; color: var(--orange); }
+
+  /* ── Task Cards ── */
+  .task-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .task-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: opacity 0.3s, transform 0.3s;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+  }
+  .task-card:active { transform: scale(0.98); }
+
+  .check-circle {
+    width: 24px; height: 24px; min-width: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--separator);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+    margin-top: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+  .check-circle.checked {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .check-circle.checked::after {
+    content: '';
+    position: absolute;
+    width: 10px; height: 6px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
+
+  .task-content { flex: 1; min-width: 0; }
+  .task-title {
+    font-size: 15px; font-weight: 600;
+    color: var(--label);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    position: relative;
+    transition: color 0.3s;
+  }
+  .task-title::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    width: 0; height: 1.5px;
+    background: var(--label3);
+    transform: translateY(-50%);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 2px;
+  }
+  .task-card.done .task-title { color: var(--label3); }
+  .task-card.done .task-title::after { width: 100%; }
+
+  .task-desc {
+    font-size: 13px; color: var(--label3); font-weight: 400;
+    margin-top: 3px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.3s;
+  }
+  .task-card.done .task-desc { color: rgba(142,142,147,0.6); }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--label3);
+    font-size: 15px;
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 8px; }
+
+  /* ── FAB ── */
+  .fab {
+    position: fixed;
+    bottom: 28px;
+    right: 50%;
+    transform: translateX(50%);
+    max-width: 390px;
+    width: calc(100% - 40px);
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    height: 54px;
+    font-size: 17px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 24px rgba(0,122,255,0.4);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    z-index: 40;
+    font-family: var(--font);
+  }
+  .fab:active { transform: translateX(50%) scale(0.97); box-shadow: 0 2px 12px rgba(0,122,255,0.3); }
+  .fab-icon { font-size: 22px; font-weight: 300; line-height: 1; }
+
+  /* ── Bottom Sheet ── */
+  .sheet-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0); /* starts transparent */
+    z-index: 100;
+    display: none;
+    transition: background 0.35s;
+  }
+  .sheet-overlay.active { display: flex; align-items: flex-end; }
+  .sheet-overlay.visible { background: rgba(0,0,0,0.4); }
+
+  .sheet {
+    background: var(--card);
+    border-radius: 22px 22px 0 0;
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 12px 20px 40px;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .sheet.open { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 36px; height: 5px;
+    background: var(--separator);
+    border-radius: 3px;
+    margin: 0 auto 20px;
+  }
+  .sheet-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+
+  /* ── Type Picker ── */
+  .type-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .type-btn {
+    background: var(--card2);
+    border: 2px solid transparent;
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font);
+  }
+  .type-btn:active { transform: scale(0.96); }
+  .type-btn.active-daily { border-color: var(--accent); background: var(--accent-soft); }
+  .type-btn.active-weekly { border-color: var(--orange); background: #FFF3E0; }
+  .type-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+  .type-label { font-size: 14px; font-weight: 600; color: var(--label); }
+  .type-sub { font-size: 12px; color: var(--label3); margin-top: 2px; }
+
+  /* ── Day Picker ── */
+  .day-picker {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 6px; margin-bottom: 20px;
+  }
+  .dp-btn {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1.5px solid var(--separator);
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    color: var(--label);
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: var(--font);
+  }
+  .dp-btn:active { transform: scale(0.9); }
+  .dp-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+
+  /* ── Form Fields ── */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 13px; font-weight: 600; color: var(--label3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 7px; display: block; }
+  .form-input, .form-textarea {
+    width: 100%;
+    background: var(--card2);
+    border: 1.5px solid var(--separator);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px;
+    font-size: 16px;
+    font-family: var(--font);
+    color: var(--label);
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    resize: none;
+  }
+  .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { height: 80px; }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    height: 52px;
+    font-size: 17px; font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: var(--font);
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .submit-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .submit-btn:disabled { opacity: 0.4; }
+
+  /* ── Animations ── */
+  @keyframes pop-in {
+    0% { transform: scale(0.8); opacity: 0; }
+    60% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .task-card.new-in { animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+  @keyframes slide-out {
+    to { opacity: 0; transform: translateX(30px) scale(0.95); max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; }
+  }
+  .task-card.removing { animation: slide-out 0.3s ease forwards; }
+
+  /* Pulse ring on check */
+  @keyframes ripple {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+  .ripple-ring {
+    position: absolute;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: ripple 0.4s ease-out forwards;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">Focus</div>
+      <div class="header-date" id="header-date"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Week Calendar -->
+<div class="week-strip" id="week-strip"></div>
+
+<!-- Daily Tasks -->
+<div class="section" id="daily-section">
+  <div class="section-header">
+    <span class="section-title">Daily</span>
+    <span class="section-badge badge-daily" id="daily-count">0 Tasks</span>
+  </div>
+  <div class="task-list" id="daily-list"></div>
+</div>
+
+<!-- Weekly Tasks -->
+<div class="section" id="weekly-section">
+  <div class="section-header">
+    <span class="section-title">Weekly</span>
+    <span class="section-badge badge-weekly" id="weekly-count">0 Tasks</span>
+  </div>
+  <div class="task-list" id="weekly-list"></div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab">
+  <span class="fab-icon">+</span>
+  Aufgabe hinzufügen
+</button>
+
+<!-- Bottom Sheet Overlay -->
+<div class="sheet-overlay" id="sheet-overlay">
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Neue Aufgabe</div>
+
+    <!-- Step 1: Type -->
+    <div id="step-type">
+      <div class="type-picker">
+        <div class="type-btn" id="btn-daily" onclick="selectType('daily')">
+          <span class="type-icon">☀️</span>
+          <div class="type-label">Daily</div>
+          <div class="type-sub">Jeden Tag</div>
+        </div>
+        <div class="type-btn" id="btn-weekly" onclick="selectType('weekly')">
+          <span class="type-icon">📅</span>
+          <div class="type-label">Weekly</div>
+          <div class="type-sub">Bestimmter Tag</div>
+        </div>
+      </div>
+
+      <!-- Day picker (weekly only) -->
+      <div id="day-picker-wrap" style="display:none; margin-bottom:16px;">
+        <div class="form-label">Tag auswählen</div>
+        <div class="day-picker" id="day-picker"></div>
+      </div>
+
+      <!-- Form -->
+      <div class="form-group">
+        <label class="form-label">Titel</label>
+        <input class="form-input" id="task-title-input" placeholder="z.B. Sport machen" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beschreibung</label>
+        <textarea class="form-textarea" id="task-desc-input" placeholder="Optional – kurze Notiz zur Aufgabe…" maxlength="200"></textarea>
+      </div>
+      <button class="submit-btn" id="submit-btn" onclick="submitTask()" disabled>Hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS_DE = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+const DAYS_FULL = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+let today = new Date();
+today.setHours(0,0,0,0);
+let selectedDate = new Date(today);
+let newTaskType = null;
+let newTaskDay = null; // 0-6 for weekly
+let tasks = JSON.parse(localStorage.getItem('focus_tasks') || '[]');
+
+// ── Helpers ──
+function dateKey(d) {
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function getWeekStart(d) {
+  const day = d.getDay(); // 0=So
+  // Week starts Monday
+  const diff = day === 0 ? -6 : 1 - day;
+  const ws = new Date(d);
+  ws.setDate(d.getDate() + diff);
+  ws.setHours(0,0,0,0);
+  return ws;
+}
+
+function saveTasks() {
+  localStorage.setItem('focus_tasks', JSON.stringify(tasks));
+}
+
+// ── Render Week ──
+function renderWeek() {
+  const strip = document.getElementById('week-strip');
+  strip.innerHTML = '';
+  const ws = getWeekStart(today);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(ws);
+    d.setDate(ws.getDate() + i);
+    const isToday = dateKey(d) === dateKey(today);
+    const isSelected = dateKey(d) === dateKey(selectedDate);
+    const key = dateKey(d);
+
+    // Count task dots
+    const dayTasks = tasks.filter(t => {
+      if (t.type === 'daily') return true;
+      if (t.type === 'weekly') return t.weekDay === d.getDay();
+      return false;
+    });
+    const hasDailyDot = dayTasks.some(t => t.type === 'daily');
+    const hasWeeklyDot = dayTasks.some(t => t.type === 'weekly');
+
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
+    cell.innerHTML = `
+      <span class="day-name">${DAYS_DE[d.getDay()]}</span>
+      <div class="day-num">${d.getDate()}</div>
+      <div class="task-dot-row">
+        ${hasDailyDot ? '<div class="task-dot dot-daily"></div>' : ''}
+        ${hasWeeklyDot ? '<div class="task-dot dot-weekly"></div>' : ''}
+      </div>
+    `;
+    cell.addEventListener('click', () => {
+      selectedDate = new Date(d);
+      renderWeek();
+      renderTasks();
+    });
+    strip.appendChild(cell);
+  }
+
+  document.getElementById('header-date').textContent =
+    `${DAYS_FULL[today.getDay()]}, ${today.getDate()}. ${MONTHS_DE[today.getMonth()]} ${today.getFullYear()}`;
+}
+
+// ── Render Tasks ──
+function renderTasks() {
+  const dayOfWeek = selectedDate.getDay();
+  const dKey = dateKey(selectedDate);
+
+  const dailyTasks = tasks.filter(t => t.type === 'daily');
+  const weeklyTasks = tasks.filter(t => t.type === 'weekly' && t.weekDay === dayOfWeek);
+
+  renderList('daily-list', dailyTasks, dKey);
+  renderList('weekly-list', weeklyTasks, dKey);
+
+  document.getElementById('daily-count').textContent =
+    `${dailyTasks.length} Task${dailyTasks.length !== 1 ? 's' : ''}`;
+  document.getElementById('weekly-count').textContent =
+    `${weeklyTasks.length} Task${weeklyTasks.length !== 1 ? 's' : ''}`;
+}
+
+function renderList(containerId, list, dKey) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">✨</div>Keine Aufgaben</div>`;
+    return;
+  }
+
+  list.forEach(task => {
+    const completionKey = `${task.id}_${dKey}`;
+    const isDone = task.completions && task.completions.includes(completionKey);
+
+    const card = document.createElement('div');
+    card.className = 'task-card' + (isDone ? ' done' : '');
+    card.dataset.id = task.id;
+    card.dataset.dkey = dKey;
+    card.innerHTML = `
+      <div class="check-circle ${isDone ? 'checked' : ''}" data-id="${task.id}"></div>
+      <div class="task-content">
+        <div class="task-title">${escHtml(task.title)}</div>
+        ${task.desc ? `<div class="task-desc">${escHtml(task.desc)}</div>` : ''}
+      </div>
+    `;
+
+    const circle = card.querySelector('.check-circle');
+    circle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleTask(task.id, dKey, card, circle);
+    });
+
+    el.appendChild(card);
+  });
+}
+
+function toggleTask(taskId, dKey, card, circle) {
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  if (!task.completions) task.completions = [];
+  const key = `${taskId}_${dKey}`;
+  const idx = task.completions.indexOf(key);
+
+  if (idx === -1) {
+    // Mark done
+    task.completions.push(key);
+    card.classList.add('done');
+    circle.classList.add('checked');
+
+    // Ripple
+    const ring = document.createElement('div');
+    ring.className = 'ripple-ring';
+    circle.appendChild(ring);
+    setTimeout(() => ring.remove(), 500);
+  } else {
+    // Unmark
+    task.completions.splice(idx, 1);
+    card.classList.remove('done');
+    circle.classList.remove('checked');
+  }
+
+  saveTasks();
+  updateDots();
+}
+
+function updateDots() {
+  renderWeek();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Add Task Sheet ──
+document.getElementById('fab').addEventListener('click', openSheet);
+document.getElementById('sheet-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeSheet();
+});
+
+function openSheet() {
+  newTaskType = null;
+  newTaskDay = null;
+  document.getElementById('task-title-input').value = '';
+  document.getElementById('task-desc-input').value = '';
+  document.getElementById('btn-daily').className = 'type-btn';
+  document.getElementById('btn-weekly').className = 'type-btn';
+  document.getElementById('day-picker-wrap').style.display = 'none';
+  document.getElementById('submit-btn').disabled = true;
+  renderDayPicker();
+
+  const overlay = document.getElementById('sheet-overlay');
+  const sheet = document.getElementById('sheet');
+  overlay.style.display = 'flex';
+  requestAnimationFrame(() => {
+    overlay.classList.add('visible');
+    sheet.classList.add('open');
+  });
+}
+
+function closeSheet() {
+  const overlay = document.getElementById('sheet-overlay');
+  const sheet = document.getElementById('sheet');
+  overlay.classList.remove('visible');
+  sheet.classList.remove('open');
+  setTimeout(() => {
+    overlay.style.display = 'none';
+  }, 350);
+}
+
+function selectType(type) {
+  newTaskType = type;
+  newTaskDay = null;
+  document.getElementById('btn-daily').className = 'type-btn' + (type === 'daily' ? ' active-daily' : '');
+  document.getElementById('btn-weekly').className = 'type-btn' + (type === 'weekly' ? ' active-weekly' : '');
+  document.getElementById('day-picker-wrap').style.display = type === 'weekly' ? 'block' : 'none';
+  validateForm();
+}
+
+function renderDayPicker() {
+  const picker = document.getElementById('day-picker');
+  picker.innerHTML = '';
+  // Mo–So (1,2,3,4,5,6,0)
+  const order = [1,2,3,4,5,6,0];
+  const labels = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  order.forEach((dayIdx, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'dp-btn' + (newTaskDay === dayIdx ? ' active' : '');
+    btn.textContent = labels[i];
+    btn.onclick = () => {
+      newTaskDay = dayIdx;
+      renderDayPicker();
+      validateForm();
+    };
+    picker.appendChild(btn);
+  });
+}
+
+function validateForm() {
+  const title = document.getElementById('task-title-input').value.trim();
+  const valid = title.length > 0 && newTaskType !== null &&
+    (newTaskType === 'daily' || (newTaskType === 'weekly' && newTaskDay !== null));
+  document.getElementById('submit-btn').disabled = !valid;
+}
+
+document.getElementById('task-title-input').addEventListener('input', validateForm);
+
+function submitTask() {
+  const title = document.getElementById('task-title-input').value.trim();
+  const desc = document.getElementById('task-desc-input').value.trim();
+  if (!title || !newTaskType) return;
+
+  const task = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    type: newTaskType,
+    title,
+    desc,
+    completions: [],
+    createdAt: Date.now()
+  };
+  if (newTaskType === 'weekly') task.weekDay = newTaskDay;
+
+  tasks.push(task);
+  saveTasks();
+  closeSheet();
+  renderWeek();
+  renderTasks();
+
+  // Animate new card in after sheet closes
+  setTimeout(() => {
+    const newCard = document.querySelector(`[data-id="${task.id}"]`);
+    if (newCard) newCard.classList.add('new-in');
+  }, 400);
+}
+
+// ── Init ──
+renderWeek();
+renderTasks();
+
+// ── PWA Manifest (injected inline) ──
+const iconSvg = `<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#007AFF"/><stop offset="100%" stop-color="#34C759"/></linearGradient></defs><rect width="512" height="512" rx="114" fill="url(#bg)"/><circle cx="256" cy="220" r="96" fill="none" stroke="white" stroke-width="18" opacity="0.3"/><path d="M200 220L240 262L312 186" stroke="white" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><text x="256" y="400" text-anchor="middle" font-family="-apple-system,Helvetica Neue,sans-serif" font-size="72" font-weight="700" fill="white">Focus</text></svg>`;
+const svgBlob = new Blob([iconSvg], {type: 'image/svg+xml'});
+const iconUrl = URL.createObjectURL(svgBlob);
+const manifest = {
+  name: "Focus — Task Manager", short_name: "Focus",
+  description: "Dein minimalistischer Daily & Weekly Task Manager",
+  start_url: "./", display: "standalone",
+  background_color: "#F2F2F7", theme_color: "#007AFF", orientation: "portrait",
+  icons: [
+    { src: iconUrl, sizes: "192x192", type: "image/svg+xml" },
+    { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+  ]
+};
+const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+document.getElementById('pwa-manifest').setAttribute('href', URL.createObjectURL(manifestBlob));
+</script>
+</body>
+</html>
