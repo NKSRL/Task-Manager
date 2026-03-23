@@ -55,7 +55,7 @@
 :root {
   --bg:#F2F2F7; --card:#FFFFFF; --card2:#F9F9FB;
   --accent:#007AFF; --accent-soft:#EAF3FF;
-  --green:#34C759; --red:#FF3B30; --orange:#FF9500; --purple:#AF52DE;
+  --green:#34C759; --red:#FF3B30; --orange:#FF9500; --purple:#AF52DE; --teal:#30B0C7;
   --label:#1C1C1E; --label2:#3C3C43; --label3:#8E8E93;
   --separator:rgba(60,60,67,0.12);
   --shadow:0 2px 20px rgba(0,0,0,0.08);
@@ -153,6 +153,7 @@ body {
 .task-dot { width:4px; height:4px; border-radius:50%; }
 .dot-daily { background:var(--accent); }
 .dot-weekly { background:var(--orange); }
+.dot-semi { background:var(--teal); }
 .dot-single { background:var(--purple); }
 
 /* Today button */
@@ -173,6 +174,7 @@ body {
 .section-badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:20px; }
 .badge-daily { background:var(--accent-soft); color:var(--accent); }
 .badge-weekly { background:#FFF3E0; color:var(--orange); }
+.badge-semi { background:#E0F6FA; color:var(--teal); }
 .badge-single { background:#F3E8FF; color:var(--purple); }
 
 /* Task cards */
@@ -255,7 +257,7 @@ body {
 .sheet-title { font-size:20px; font-weight:700; margin-bottom:20px; text-align:center; }
 
 /* Type picker */
-.type-picker { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:20px; }
+.type-picker { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px; }
 .type-btn {
   background:var(--card2); border:2px solid transparent;
   border-radius:var(--radius); padding:12px 8px; text-align:center;
@@ -264,12 +266,13 @@ body {
 .type-btn:active { transform:scale(0.95); }
 .type-btn.active-daily { border-color:var(--accent); background:var(--accent-soft); }
 .type-btn.active-weekly { border-color:var(--orange); background:#FFF3E0; }
+.type-btn.active-semi { border-color:var(--teal); background:#E0F6FA; }
 .type-btn.active-single { border-color:var(--purple); background:#F3E8FF; }
 .type-icon { font-size:24px; display:block; margin-bottom:4px; }
 .type-label { font-size:13px; font-weight:600; color:var(--label); }
 .type-sub { font-size:11px; color:var(--label3); margin-top:1px; }
 
-/* Day picker */
+/* Day picker (single select for weekly) */
 .day-picker { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:16px; }
 .dp-btn {
   aspect-ratio:1; border-radius:50%; border:1.5px solid var(--separator);
@@ -277,7 +280,8 @@ body {
   font-size:12px; font-weight:600; color:var(--label); cursor:pointer; font-family:var(--font);
 }
 .dp-btn:active { transform:scale(0.88); }
-.dp-btn.active { background:var(--orange); border-color:var(--orange); color:#fff; }
+.dp-btn.active-single { background:var(--orange); border-color:var(--orange); color:#fff; }
+.dp-btn.active-multi { background:var(--teal); border-color:var(--teal); color:#fff; }
 
 /* Form */
 .form-group { margin-bottom:14px; }
@@ -381,6 +385,15 @@ body {
   <div class="task-list" id="weekly-list"></div>
 </div>
 
+<!-- Semi-Weekly -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-title">Semi-Weekly</span>
+    <span class="section-badge badge-semi" id="semi-count">0 Tasks</span>
+  </div>
+  <div class="task-list" id="semi-list"></div>
+</div>
+
 <!-- FAB -->
 <button class="fab" id="fab">
   <span class="fab-icon">+</span>
@@ -401,7 +414,12 @@ body {
       <div class="type-btn" id="btn-type-weekly" onclick="selectType('weekly')">
         <span class="type-icon">📅</span>
         <div class="type-label">Weekly</div>
-        <div class="type-sub">Wochentag</div>
+        <div class="type-sub">1 Wochentag</div>
+      </div>
+      <div class="type-btn" id="btn-type-semi" onclick="selectType('semi')">
+        <span class="type-icon">🔁</span>
+        <div class="type-label">Semi-Weekly</div>
+        <div class="type-sub">Mehrere Tage</div>
       </div>
       <div class="type-btn" id="btn-type-single" onclick="selectType('single')">
         <span class="type-icon">📌</span>
@@ -410,7 +428,7 @@ body {
       </div>
     </div>
     <div id="day-picker-wrap" style="display:none;margin-bottom:16px;">
-      <div class="form-label">Tag auswählen</div>
+      <div class="form-label" id="day-picker-label">Tag auswählen</div>
       <div class="day-picker" id="day-picker"></div>
     </div>
     <div class="form-group">
@@ -449,7 +467,8 @@ let selectedDate = new Date(today);
 let viewWeekStart = getWeekStart(today);
 let tasks = JSON.parse(localStorage.getItem('focus_tasks') || '[]');
 let newTaskType = null;
-let newTaskDay = null;
+let newTaskDay = null;   // weekly: single day index
+let newTaskDays = [];    // semi-weekly: array of day indices
 let editingTaskId = null;
 let deletingTaskId = null;
 
@@ -474,6 +493,7 @@ function renderWeek() {
     const dow = d.getDay(), dKey = dateKey(d);
     const hasDot_d = tasks.some(t=>t.type==='daily');
     const hasDot_w = tasks.some(t=>t.type==='weekly'&&t.weekDay===dow);
+    const hasDot_sw = tasks.some(t=>t.type==='semi'&&Array.isArray(t.weekDays)&&t.weekDays.includes(dow));
     const hasDot_s = tasks.some(t=>t.type==='single'&&t.dateKey===dKey);
 
     const cell = document.createElement('div');
@@ -483,6 +503,7 @@ function renderWeek() {
       <div class="task-dot-row">
         ${hasDot_d?'<div class="task-dot dot-daily"></div>':''}
         ${hasDot_w?'<div class="task-dot dot-weekly"></div>':''}
+        ${hasDot_sw?'<div class="task-dot dot-semi"></div>':''}
         ${hasDot_s?'<div class="task-dot dot-single"></div>':''}
       </div>`;
 
@@ -518,12 +539,15 @@ function renderTasks() {
   const dow=selectedDate.getDay(), dKey=dateKey(selectedDate);
   const dl=tasks.filter(t=>t.type==='daily');
   const wl=tasks.filter(t=>t.type==='weekly'&&t.weekDay===dow);
+  const swl=tasks.filter(t=>t.type==='semi'&&Array.isArray(t.weekDays)&&t.weekDays.includes(dow));
   const sl=tasks.filter(t=>t.type==='single'&&t.dateKey===dKey);
+  renderList('single-list',sl,dKey);
   renderList('daily-list',dl,dKey);
   renderList('weekly-list',wl,dKey);
-  renderList('single-list',sl,dKey);
+  renderList('semi-list',swl,dKey);
   document.getElementById('daily-count').textContent=dl.length+' Task'+(dl.length!==1?'s':'');
   document.getElementById('weekly-count').textContent=wl.length+' Task'+(wl.length!==1?'s':'');
+  document.getElementById('semi-count').textContent=swl.length+' Task'+(swl.length!==1?'s':'');
   document.getElementById('single-count').textContent=sl.length+' Task'+(sl.length!==1?'s':'');
 }
 
@@ -603,20 +627,22 @@ document.getElementById('confirm-overlay').addEventListener('click',function(e){
 document.getElementById('fab').addEventListener('click', openSheet);
 
 function openSheet(){
-  editingTaskId=null; newTaskType=null; newTaskDay=null;
+  editingTaskId=null; newTaskType=null; newTaskDay=null; newTaskDays=[];
   document.getElementById('task-title-input').value='';
   document.getElementById('task-desc-input').value='';
   document.getElementById('sheet-title').textContent='Neue Aufgabe';
   document.getElementById('submit-btn').textContent='Hinzufügen';
   document.getElementById('submit-btn').disabled=true;
-  ['daily','weekly','single'].forEach(t=>document.getElementById('btn-type-'+t).className='type-btn');
+  ['daily','weekly','semi','single'].forEach(t=>document.getElementById('btn-type-'+t).className='type-btn');
   document.getElementById('day-picker-wrap').style.display='none';
   renderDayPicker(); openOverlay('sheet-overlay','sheet');
 }
 
 function openEditSheet(tid){
   const task=tasks.find(t=>t.id===tid); if(!task) return;
-  editingTaskId=tid; newTaskType=task.type; newTaskDay=task.weekDay??null;
+  editingTaskId=tid; newTaskType=task.type;
+  newTaskDay=task.weekDay??null;
+  newTaskDays=task.type==='semi'?(task.weekDays||[]).slice():[];
   document.getElementById('task-title-input').value=task.title;
   document.getElementById('task-desc-input').value=task.desc||'';
   document.getElementById('sheet-title').textContent='Aufgabe bearbeiten';
@@ -624,19 +650,28 @@ function openEditSheet(tid){
   document.getElementById('submit-btn').disabled=false;
   document.getElementById('btn-type-daily').className='type-btn'+(task.type==='daily'?' active-daily':'');
   document.getElementById('btn-type-weekly').className='type-btn'+(task.type==='weekly'?' active-weekly':'');
+  document.getElementById('btn-type-semi').className='type-btn'+(task.type==='semi'?' active-semi':'');
   document.getElementById('btn-type-single').className='type-btn'+(task.type==='single'?' active-single':'');
-  document.getElementById('day-picker-wrap').style.display=task.type==='weekly'?'block':'none';
+  document.getElementById('day-picker-wrap').style.display=(task.type==='weekly'||task.type==='semi')?'block':'none';
+  if(task.type==='weekly') document.getElementById('day-picker-label').textContent='Tag auswählen';
+  if(task.type==='semi') document.getElementById('day-picker-label').textContent='Tage auswählen (mehrere möglich)';
   renderDayPicker(); openOverlay('sheet-overlay','sheet');
 }
 
 function closeSheet(){ closeOverlay('sheet-overlay','sheet'); editingTaskId=null; }
 
 function selectType(type){
-  newTaskType=type; if(type!=='weekly') newTaskDay=null;
+  newTaskType=type;
+  if(type!=='weekly') newTaskDay=null;
+  if(type!=='semi') newTaskDays=[];
   document.getElementById('btn-type-daily').className='type-btn'+(type==='daily'?' active-daily':'');
   document.getElementById('btn-type-weekly').className='type-btn'+(type==='weekly'?' active-weekly':'');
+  document.getElementById('btn-type-semi').className='type-btn'+(type==='semi'?' active-semi':'');
   document.getElementById('btn-type-single').className='type-btn'+(type==='single'?' active-single':'');
-  document.getElementById('day-picker-wrap').style.display=type==='weekly'?'block':'none';
+  const showPicker=type==='weekly'||type==='semi';
+  document.getElementById('day-picker-wrap').style.display=showPicker?'block':'none';
+  if(type==='weekly') document.getElementById('day-picker-label').textContent='Tag auswählen';
+  if(type==='semi') document.getElementById('day-picker-label').textContent='Tage auswählen (mehrere möglich)';
   renderDayPicker(); validateForm();
 }
 
